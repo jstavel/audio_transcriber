@@ -1,9 +1,10 @@
 # Implementation Plan - Slice 1: AI Studio E2E Transcriber
 
 ## Phase 1: Environment Setup
-- [ ] Initialize Python virtual environment.
-- [ ] Install dependencies: `playwright`.
-- [ ] Install Playwright browsers: `playwright install chromium`.
+- [x] Initialize Python virtual environment.
+- [x] Install dependencies: `playwright`.
+- [x] Install Playwright browsers: `playwright install chromium`.
+- [x] Create requirements.txt
 
 ## Phase 2: Session Management (Manual Auth)
 - [ ] Create `authenticate.py`:
