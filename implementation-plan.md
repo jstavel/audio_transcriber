@@ -7,11 +7,11 @@
 - [x] Create requirements.txt
 
 ## Phase 2: Session Management (Manual Auth)
-- [ ] Create `authenticate.py`:
-    - Launch Chromium in non-headless mode.
-    - Navigate to `https://aistudio.google.com/`.
-    - Wait for manual user login.
-    - Save storage state to `auth_google.json` using `context.storage_state()`.
+- [x] Create `authenticate.py`:
+    - [x] Launch Chromium in non-headless mode.
+    - [x] Navigate to `https://aistudio.google.com/`.
+    - [x] Wait for manual user login.
+    - [x] Save storage state to `auth_google.json` using `context.storage_state()`.
 
 ## Phase 3: Core Transcription Engine
 - [ ] Create `transcribe.py`:
