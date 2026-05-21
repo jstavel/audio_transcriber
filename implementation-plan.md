@@ -8,7 +8,7 @@
 
 ## Phase 2: Session Management (Manual Auth)
 - [x] Create `authenticate.py`:
-    - [x] Launch Chromium in non-headless mode.
+    - [x] Connect to a manually launched Chrome instance via `connect_over_cdp` on port 9222.
     - [x] Navigate to `https://aistudio.google.com/`.
     - [x] Wait for manual user login.
     - [x] Save storage state to `auth_google.json` using `context.storage_state()`.

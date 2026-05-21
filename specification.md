@@ -6,12 +6,14 @@ The goal of Slice 1 is to create a lightweight, robust command-line tool written
 This slice deliberately bypasses Google's anti-bot/2FA login mechanics by utilizing **Session Reuse** (importing a pre-authenticated JSON state). It focuses entirely on local execution, browser automation, async UI synchronization, and data extraction.
 
 ## 2. Target Workflow
-1. **Authentication Phase (Manual/One-time):** A script launches a visible browser, waits for the user to authenticate with Google, and dumps the cookies/local storage into `auth_google.json`.
-2. **Execution Phase (Automated):** The main script starts Playwright using `auth_google.json`, navigates to AI Studio, uploads a specified `.mp3`, inputs the prompt, waits for the LLM to complete generation, and saves the text output to a local `.md` file.
+1. **Manual Preparation:** User launches Google Chrome manually with remote debugging enabled (`--remote-debugging-port=9222`).
+2. **Authentication Phase:** A script connects to the running Chrome instance via CDP, waits for the user to authenticate with Google, and dumps the cookies/local storage into `auth_google.json`.
+3. **Execution Phase (Automated):** The main script starts Playwright using `auth_google.json`, navigates to AI Studio, uploads a specified `.mp3`, inputs the prompt, waits for the LLM to complete generation, and saves the text output to a local `.md` file.
 
 ## 3. Technology Stack
 - **Language:** Python 3.11+ (Targeting Kraken QA technical requirements)
 - **Framework:** Playwright for Python (Synchronous API preferred for straightforward CLI execution)
+- **Connection:** Chrome DevTools Protocol (CDP) to attach to existing browser sessions.
 - **Target Site:** `https://aistudio.google.com/`
 
 ## 4. Key Engineering Challenges & Solutions
@@ -38,7 +40,7 @@ This slice deliberately bypasses Google's anti-bot/2FA login mechanics by utiliz
 
 ## Phase 2: Session Management (Manual Auth)
 - [ ] Create `authenticate.py`:
-    - Launch Chromium in non-headless mode.
+    - Connect to a manually launched Chrome instance via `connect_over_cdp` on port 9222.
     - Navigate to `https://aistudio.google.com/`.
     - Wait for manual user login.
     - Save storage state to `auth_google.json` using `context.storage_state()`.
