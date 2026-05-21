@@ -1,19 +1,11 @@
-import time
 from playwright.sync_api import sync_playwright
-from playwright_stealth import stealth_sync
 
 def run():
     with sync_playwright() as p:
-        # Launch browser in non-headless mode
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            locale="en-US"
-        )
-        page = context.new_page()
-        
-        # # Apply stealth to bypass bot detection
-        # stealth_sync(page)
+        # Connect to existing browser instance
+        browser = p.chromium.connect_over_cdp("http://localhost:9222")
+        context = browser.contexts[0]
+        page = context.pages[0] if context.pages else context.new_page()
         
         print("Navigating to AI Studio...")
         page.goto("https://aistudio.google.com/")
