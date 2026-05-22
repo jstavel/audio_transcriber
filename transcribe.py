@@ -1,7 +1,7 @@
 import sys
 import os
 from pathlib import Path
-from playwright.sync_api import sync_playwright, TimeoutError
+from playwright.sync_api import sync_playwright, TimeoutError, Error
 
 def transcribe(audio_path):
     with sync_playwright() as p:
@@ -40,18 +40,22 @@ def transcribe(audio_path):
             file_chooser = fc_info.value
             file_chooser.set_files(audio_path)
 
-            # Wait logic for audio processing (watching for the processing indicator to disappear or waveform to appear)
-            # In AI Studio, the file card usually shows a 'Processing' state. 
-            # We wait for the 'Cancel' button or progress bar on the file card to disappear.
+            # Wait for the filename to appear in the prompt media container
+            filename = Path(audio_path).name
+            print(f"Waiting for {filename} to appear in prompt box...")
+            page.wait_for_selector(f"ms-prompt-media:has-text('{filename}')", timeout=60000)
+
+            # Wait logic for audio processing (watching for the processing indicator to disappear)
             page.wait_for_selector("file-card:has-text('Processing')", state="hidden", timeout=300000)
 
             print("Injecting prompt...")
-            prompt_area = page.get_by_placeholder("Type something")
+            prompt_area = page.get_by_placeholder("Start typing a prompt to see what our models can do")
             prompt_area.fill("Transcribe this audio to org-mode format")
 
             print("Executing...")
             # Trigger Run
             run_button = page.get_by_role("button", name="Run")
+            run_button.wait_for(state="visible", timeout=30000)
             run_button.click()
 
             # Completion polling: Wait for the 'Stop' button to disappear and 'Run' to be available
@@ -68,8 +72,8 @@ def transcribe(audio_path):
                 f.write(result_text)
             
             print(f"Successfully saved transcription to {output_filename}")
-        except TimeoutError as e:
-            print(f"\n[!] Timeout encountered: {e}")
+        except (TimeoutError, Error) as e:
+            print(f"\n[!] Playwright error encountered: {e}")
             print("Generating debug artifacts...")
             
             # Step 3.1: Visual State Capture

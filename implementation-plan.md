@@ -71,5 +71,6 @@ Based on `debug_elements.txt`, the standard `input[type="file"]` locator is insu
     1.  Wait for and click the `ms-add-media-button` to open the menu.
     2.  Use `page.expect_file_chooser()` while clicking the "Upload files" menu item.
     3.  Inject the audio path into the resulting file chooser.
+    4.  Wait for the filename of the uploaded audio to appear within the `ms-prompt-media` container in the prompt box, signaling the upload is complete.
 
 
