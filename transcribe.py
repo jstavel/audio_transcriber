@@ -27,9 +27,16 @@ def transcribe(audio_path):
             add_media_button = page.locator("//ms-add-media-button//button")
             add_media_button.wait_for(state="visible", timeout=30000)
             
+            # Open the media menu
+            add_media_button.click()
+
+            # Target the "Upload files" menu item that appears in the overlay
+            upload_item = page.locator("//button[contains(@class, 'upload-file-menu-item')]")
+            upload_item.wait_for(state="visible", timeout=10000)
+            
             # Use expect_file_chooser to handle the file upload interaction
             with page.expect_file_chooser() as fc_info:
-                add_media_button.click()
+                upload_item.click()
             file_chooser = fc_info.value
             file_chooser.set_files(audio_path)
 

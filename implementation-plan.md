@@ -65,9 +65,11 @@ For each matching element, harvest the following metadata properties:
 ## 4. Selector Refinement (Post-Debug Analysis)
 Based on `debug_elements.txt`, the standard `input[type="file"]` locator is insufficient because it is hidden. The interaction must target the UI element representing the "Add" functionality.
 
-*   **Stable XPath for Media Upload:** `//ms-add-media-button//button`
+*   **Stable XPath for Media Button:** `//ms-add-media-button//button`
+*   **Stable XPath for Upload Item:** `//button[contains(@class, "upload-file-menu-item")]`
 *   **Interaction Strategy:**
-    1.  Wait for and click the `ms-add-media-button`.
-    2.  Use `page.expect_file_chooser()` or target the now-present file input to set the audio path.
+    1.  Wait for and click the `ms-add-media-button` to open the menu.
+    2.  Use `page.expect_file_chooser()` while clicking the "Upload files" menu item.
+    3.  Inject the audio path into the resulting file chooser.
 
 
