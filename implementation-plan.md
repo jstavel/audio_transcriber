@@ -1,31 +1,63 @@
-# Implementation Plan - Slice 1: AI Studio E2E Transcriber
+# Implementation Plan: Robust Offline Debugging for Selector Timeouts
 
-## Phase 1: Environment Setup
-- [x] Initialize Python virtual environment.
-- [x] Install dependencies: `playwright`.
-- [x] Install Playwright browsers: `playwright install chromium`.
-- [x] Create requirements.txt
+## 1. Context & Traceability
+* **Slice Reference:** `slice-2026-05-22-cdp-debug-artifacts`
+* **Problem Statement:** The script `transcribe.py` successfully connects to Google AI Studio via CDP, but fails to interact with the file upload interface (the "+" button) due to unstable, dynamic, or updated DOM selectors. High-frequency UI shifts in AI Studio make manual/live debugging inefficient.
+* **Solution Strategy:** Implement a diagnostic "black box" inside the automation script. Upon a selector timeout, the script will automatically capture the exact state of the application in two local files (`debug_screenshot.png` and `debug_elements.txt`), enabling rapid offline analysis and XPath/CSS selector refinement.
 
-## Phase 2: Session Management (Manual Auth)
-- [x] Create `authenticate.py`:
-    - [x] Connect to a manually launched Chrome instance via `connect_over_cdp` on port 9222.
-    - [x] Navigate to `https://aistudio.google.com/`.
-    - [x] Wait for manual user login.
-    - [x] Save storage state to `auth_google.json` using `context.storage_state()`.
+---
 
-## Phase 3: Core Transcription Engine
-- [ ] Create `transcribe.py`:
-    - Initialize Playwright with `storage_state="auth_google.json"`.
-    - Implement file upload logic (targeting the file input element).
-    - Implement wait logic for audio processing (watching for waveform/processing indicator).
-    - Implement prompt injection ("Transcribe this audio to Markdown").
-    - Implement execution trigger (click "Run").
-    - Implement completion polling (wait for "Run" button to be re-enabled or "Stop" to disappear).
+## 2. Technical Requirements
 
-## Phase 4: Data Extraction & Output
-- [ ] Logic to locate the result text in the DOM.
-- [ ] Save extracted text to `{input_filename}.md`.
+### Target File
+* `transcribe.py`
 
-## Phase 5: Verification
-- [ ] Test with a short `.mp3` file.
-- [ ] Verify `auth_google.json` persistence.
+### Exception Boundaries
+* Intercept `playwright.async_api.TimeoutError`.
+* The `try...except` block must safely wrap all browser interaction steps following the successful initialization of the page context via CDP.
+
+---
+
+## 3. Step-by-Step Implementation Detail
+
+### Step 3.1: Visual State Capture
+Immediately upon catching the `TimeoutError`, capture the full visual state of the web application.
+* **Action:** Trigger a full-page screenshot.
+* **Output Target:** Local file `debug_screenshot.png` in the script's root directory.
+
+### Step 3.2: DOM Querying & Filtering via JavaScript Injection
+To prevent unreadable and bloated HTML dumps, use `page.evaluate()` to run a custom filtering script inside the browser context.
+
+#### Selection Strategy (The Filter Criteria):
+The script must look for elements that meet **at least one** of these structural conditions:
+1. **Interactive Tags:** All `button`, `input`, `a`, and `textarea` tags.
+2. **Context-Specific Keywords:** Any visible element containing the character `"+"`, or strings matching `"upload"`, `"add"`, `"file"`, `"insert"`, `"media"` inside its text content, `aria-label`, `title`, `id`, or `class` attributes.
+3. **Visibility Constraint:** The element must be rendered and visible. Filter out elements with `display: none`, `visibility: hidden`, or where `getBoundingClientRect()` returns zero width/height.
+
+#### Data Extraction (Per Element):
+For each matching element, harvest the following metadata properties:
+* **Tag:** `element.tagName`
+* **Text/Label:** Prioritize `element.innerText`, falling back to `aria-label`, `title`, or `placeholder` attributes.
+* **Identifiers:** `id` and `className`.
+* **Inferred Selector:** Generate a robust CSS selector or a direct XPath strategy (e.g., `//button[contains(text(), 'Add')]` or combined class paths) to aid offline selection.
+
+### Step 3.3: Output Generation & Graceful Termination
+* **File Target:** `debug_elements.txt`
+* **Format Structure:**
+  
+```text
+  ================================================================================
+  [TAG] "Extracted Text / Aria-Label"
+  ================================================================================
+  ID:        <element_id>
+  Class:     <element_classes>
+  Selector:  <css_or_xpath_strategy>
+  --------------------------------------------------------------------------------
+```
+* **Console Logging**: Print a highly visible terminal message
+  alerting the user that execution stopped, pointing explicitly to the
+  generated debug_screenshot.png and debug_elements.txt.
+
+* Cleanly close browser hooks if applicable or exit the runtime process.
+
+
