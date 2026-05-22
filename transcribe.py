@@ -54,7 +54,7 @@ def transcribe(audio_path):
 
             print("Executing...")
             # Trigger Run
-            run_button = page.get_by_role("button", name="Run")
+            run_button = page.locator("ms-run-button button.ctrl-enter-submits")
             run_button.wait_for(state="visible", timeout=30000)
             run_button.click()
 
