@@ -72,5 +72,8 @@ Based on `debug_elements.txt`, the standard `input[type="file"]` locator is insu
     2.  Use `page.expect_file_chooser()` while clicking the "Upload files" menu item.
     3.  Inject the audio path into the resulting file chooser.
     4.  Wait for the filename of the uploaded audio to appear within the `ms-prompt-media` container in the prompt box, signaling the upload is complete.
+    5.  **Submit the Prompt:**
+        *   **Target Selector:** `ms-run-button button.ctrl-enter-submits` (Matches the element containing "Run", "Ctrl", and the enter icon).
+        *   **Action:** Ensure the button is visible and enabled, then click to execute the transcription.
 
 
