@@ -22,9 +22,16 @@ def transcribe(audio_path):
 
             # Phase 3: Core Transcription Engine
             print(f"Uploading {audio_path}...")
-            # Target the hidden file input
-            file_input = page.locator('input[type="file"]')
-            file_input.set_input_files(audio_path)
+            
+            # Target the stable media button identified in debug artifacts
+            add_media_button = page.locator("//ms-add-media-button//button")
+            add_media_button.wait_for(state="visible", timeout=30000)
+            
+            # Use expect_file_chooser to handle the file upload interaction
+            with page.expect_file_chooser() as fc_info:
+                add_media_button.click()
+            file_chooser = fc_info.value
+            file_chooser.set_files(audio_path)
 
             # Wait logic for audio processing (watching for the processing indicator to disappear or waveform to appear)
             # In AI Studio, the file card usually shows a 'Processing' state. 

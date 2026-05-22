@@ -60,4 +60,14 @@ For each matching element, harvest the following metadata properties:
 
 * Cleanly close browser hooks if applicable or exit the runtime process.
 
+---
+
+## 4. Selector Refinement (Post-Debug Analysis)
+Based on `debug_elements.txt`, the standard `input[type="file"]` locator is insufficient because it is hidden. The interaction must target the UI element representing the "Add" functionality.
+
+*   **Stable XPath for Media Upload:** `//ms-add-media-button//button`
+*   **Interaction Strategy:**
+    1.  Wait for and click the `ms-add-media-button`.
+    2.  Use `page.expect_file_chooser()` or target the now-present file input to set the audio path.
+
 
