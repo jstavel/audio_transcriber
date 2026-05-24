@@ -27,7 +27,7 @@ async UI synchronization, and data extraction.
 - **Challenge: UI Race Conditions (Uploading large audio files takes time).**
   - *Solution:* Explicit async wait conditions tracking the processing state of the audio waveform element before prompt submission.
 - **Challenge: Dynamic text generation streaming.**
-  - *Solution:* Smart pooling/waiting for the completion indicator (e.g., the Stop button switching back to Run, or specific generation status classes) instead of static `time.sleep()`.
+  - *Solution:* Smart pooling/waiting for the completion indicator (e.g., the Stop button switching back to Run, or specific generation status classes) combined with additional text polling to ensure the LLM has finished printing all content before extraction.
 
 ## 5. Success Criteria
 - [ ] Main script handles a local `.mp3` file, automates the complete upload, prompt insertion, and trigger sequence.
@@ -55,10 +55,10 @@ async UI synchronization, and data extraction.
     - [x] Implement wait logic for audio processing (watching for waveform/processing indicator).
     - [x] Implement prompt injection ("Transcribe this audio to Markdown").
     - [x] Implement execution trigger (click "Run").
-    - [ ] Implement completion polling (wait for "Run" button to be re-enabled or "Stop" to disappear).
+    - [x] Implement completion polling (wait for "Run" button to be re-enabled or "Stop" to disappear).
 
 ## Phase 4: Data Extraction & Output
-- [ ] Logic to locate the result text in the DOM.
+- [ ] Implement Text Polling to wait for the LLM to finish printing/streaming the full transcription.
 - [ ] Save extracted text to `{input_filename}.md`.
 
 ## Phase 5: Verification
