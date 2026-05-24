@@ -58,14 +58,34 @@ def transcribe(audio_path):
             run_button.wait_for(state="visible", timeout=30000)
             run_button.click()
 
-            # Completion polling: Wait for the 'Stop' button to disappear and 'Run' to be available
-            page.wait_for_selector("button:has-text('Stop')", state="hidden", timeout=600000)
+            # Step 3.1 & 3.2: Content Stability Polling
+            print("Waiting for transcription to complete (polling for stability)...")
             
+            # Target the last instance of the combined-content section
+            response_container = page.locator("section.combined-content").last
+            run_button = page.locator("ms-run-button button.ctrl-enter-submits")
+
+            previous_text = ""
+            stable_iterations = 0
+            
+            while True:
+                current_text = response_container.inner_text()
+                
+                if len(current_text) > len(previous_text) and current_text.strip():
+                    previous_text = current_text
+                    stable_iterations = 0
+                elif len(current_text) == len(previous_text) and len(current_text) > 0:
+                    stable_iterations += 1
+                
+                # Check exit condition: ~3 seconds of stability AND Run button is back
+                if stable_iterations >= 2 and run_button.is_visible():
+                    break
+                    
+                page.wait_for_timeout(1500)
+
             # Phase 4: Data Extraction & Output
             print("Extracting result...")
-            # Result text is typically in a markdown-renderer or specific output div
-            result_locator = page.locator("div.model-response-text")
-            result_text = result_locator.inner_text()
+            result_text = response_container.inner_text()
 
             output_filename = f"{Path(audio_path).stem}.md"
             with open(output_filename, "w", encoding="utf-8") as f:
