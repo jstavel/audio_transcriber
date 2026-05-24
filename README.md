@@ -4,7 +4,7 @@ Automated transcription of audio files using Playwright and Google AI Studio.
 
 ## Documentation
 - [Technical Specification](docs/specification.md)
-- [Implementation Plan](docs/implementation-plan.md)
+- [Implementation Plan for Next Slice](docs/implementation-plan.md)
 - [Architecture Decision Records (ADRs)](docs/adr/)
 
 ## Quick Start
