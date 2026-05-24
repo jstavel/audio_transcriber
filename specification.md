@@ -6,7 +6,7 @@ command-line tool written in Python using Playwright. It automates
 Google AI Studio to transcribe local `.mp3` audio files into formatted
 Markdown text documents.
 
-This slice deliberately bypasses Google's anti-bot/2FA login mechanics
+This project deliberately bypasses Google's anti-bot/2FA login mechanics
 by connecting to a pre-authenticated Chrome instance via the Chrome
 DevTools Protocol (CDP). It focuses entirely on local execution, browser automation,
 async UI synchronization, and data extraction.

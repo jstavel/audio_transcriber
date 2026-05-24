@@ -1,9 +1,9 @@
-# Implementation Plan: Robust Offline Debugging for Selector Timeouts
+# Implementation Plan: Reliable Text Polling for LLM Generation
 
 ## 1. Context & Traceability
-* **Slice Reference:** `slice-2026-05-22-cdp-debug-artifacts`
-* **Problem Statement:** The script `transcribe.py` successfully connects to Google AI Studio via CDP, but fails to interact with the file upload interface (the "+" button) due to unstable, dynamic, or updated DOM selectors. High-frequency UI shifts in AI Studio make manual/live debugging inefficient.
-* **Solution Strategy:** Implement a diagnostic "black box" inside the automation script. Upon a selector timeout, the script will automatically capture the exact state of the application in two local files (`debug_screenshot.png` and `debug_elements.txt`), enabling rapid offline analysis and XPath/CSS selector refinement.
+* **Slice Reference:** `slice-2024-XX-XX-text-polling-completion`
+* **Problem Statement:** AI Studio streams text response. Even if the "Run" button returns to its idle state, the UI might still be rendering the final blocks of text or performing post-generation formatting. Simple "wait for button" logic can lead to premature scraping of incomplete transcriptions.
+* **Solution Strategy:** Implement a multi-stage polling mechanism that monitors both the DOM state (the "Run" button) and the stability of the text content itself. The script will only proceed to extraction when the content length remains static over a specific observation window.
 
 ---
 
@@ -12,68 +12,41 @@
 ### Target File
 * `transcribe.py`
 
-### Exception Boundaries
-* Intercept `playwright.async_api.TimeoutError`.
-* The `try...except` block must safely wrap all browser interaction steps following the successful initialization of the page context via CDP.
+### Logic Requirements
+* Use `page.locator()` to target the most recent response message in the AI Studio chat interface.
+* Implement a polling loop that captures `innerText` from the response container.
 
 ---
 
 ## 3. Step-by-Step Implementation Detail
 
-### Step 3.1: Visual State Capture
-Immediately upon catching the `TimeoutError`, capture the full visual state of the web application.
-* **Action:** Trigger a full-page screenshot.
-* **Output Target:** Local file `debug_screenshot.png` in the script's root directory.
+### Step 3.1: Locate the Response Container
+Identify the selector for the LLM's response output. 
+* **Target Selector:** `section.combined-content` (or the specific markdown container inside the chat history).
+* **Action:** Select the *last* instance of this container to ensure we are reading the current transcription.
 
-### Step 3.2: DOM Querying & Filtering via JavaScript Injection
-To prevent unreadable and bloated HTML dumps, use `page.evaluate()` to run a custom filtering script inside the browser context.
+### Step 3.2: Implement Content Stability Polling
+Instead of relying solely on the "Run" button, the script must verify the text has stopped growing.
+1.  **Initialize:** Set `previous_text = ""` and `stable_iterations = 0`.
+2.  **Loop:** Every 1.5 seconds (using a non-blocking wait):
+    *   Fetch `current_text` from the response container.
+    *   If `len(current_text) > len(previous_text)` and `current_text` is not empty:
+        *   Update `previous_text = current_text`.
+        *   Reset `stable_iterations = 0`.
+    *   Else if `len(current_text) == len(previous_text)` and `len(current_text) > 0`:
+        *   Increment `stable_iterations`.
+3.  **Exit Condition:** The loop terminates when `stable_iterations >= 2` (ensuring ~3 seconds of no change) AND the "Run" button is visible/enabled.
 
-#### Selection Strategy (The Filter Criteria):
-The script must look for elements that meet **at least one** of these structural conditions:
-1. **Interactive Tags:** All `button`, `input`, `a`, and `textarea` tags.
-2. **Context-Specific Keywords:** Any visible element containing the character `"+"`, or strings matching `"upload"`, `"add"`, `"file"`, `"insert"`, `"media"` inside its text content, `aria-label`, `title`, `id`, or `class` attributes.
-3. **Visibility Constraint:** The element must be rendered and visible. Filter out elements with `display: none`, `visibility: hidden`, or where `getBoundingClientRect()` returns zero width/height.
-
-#### Data Extraction (Per Element):
-For each matching element, harvest the following metadata properties:
-* **Tag:** `element.tagName`
-* **Text/Label:** Prioritize `element.innerText`, falling back to `aria-label`, `title`, or `placeholder` attributes.
-* **Identifiers:** `id` and `className`.
-* **Inferred Selector:** Generate a robust CSS selector or a direct XPath strategy (e.g., `//button[contains(text(), 'Add')]` or combined class paths) to aid offline selection.
-
-### Step 3.3: Output Generation & Graceful Termination
-* **File Target:** `debug_elements.txt`
-* **Format Structure:**
-  
-```text
-  ================================================================================
-  [TAG] "Extracted Text / Aria-Label"
-  ================================================================================
-  ID:        <element_id>
-  Class:     <element_classes>
-  Selector:  <css_or_xpath_strategy>
-  --------------------------------------------------------------------------------
-```
-* **Console Logging**: Print a highly visible terminal message
-  alerting the user that execution stopped, pointing explicitly to the
-  generated debug_screenshot.png and debug_elements.txt.
-
-* Cleanly close browser hooks if applicable or exit the runtime process.
+### Step 3.3: Extraction & Output
+Once the stability condition is met:
+*   **Action:** Perform a final fetch of the `innerText`.
+*   **File I/O:** Sanitize the input filename and write the result to a `{filename}.md` file.
+*   **Logging:** Output the path of the saved file and the final character count to the console.
 
 ---
 
-## 4. Selector Refinement (Post-Debug Analysis)
-Based on `debug_elements.txt`, the standard `input[type="file"]` locator is insufficient because it is hidden. The interaction must target the UI element representing the "Add" functionality.
-
-*   **Stable XPath for Media Button:** `//ms-add-media-button//button`
-*   **Stable XPath for Upload Item:** `//button[contains(@class, "upload-file-menu-item")]`
-*   **Interaction Strategy:**
-    1.  Wait for and click the `ms-add-media-button` to open the menu.
-    2.  Use `page.expect_file_chooser()` while clicking the "Upload files" menu item.
-    3.  Inject the audio path into the resulting file chooser.
-    4.  Wait for the filename of the uploaded audio to appear within the `ms-prompt-media` container in the prompt box, signaling the upload is complete.
-    5.  **Submit the Prompt:**
-        *   **Target Selector:** `ms-run-button button.ctrl-enter-submits` (Matches the element containing "Run", "Ctrl", and the enter icon).
-        *   **Action:** Ensure the button is visible and enabled, then click to execute the transcription.
+## 4. Verification & Edge Cases
+*   **Empty Response:** Handle cases where the LLM might fail to generate text (timeout the loop after a global limit).
+*   **Late Rendering:** The 3-second stability window accounts for AI Studio's layout shifts or "thinking" pauses.
 
 
