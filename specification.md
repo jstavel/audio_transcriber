@@ -1,9 +1,15 @@
 # Specification: Proof of Work - AI Studio E2E Transcriber
 
 ## 1. Objective & Scope
-The goal of Slice 1 is to create a lightweight, robust command-line tool written in Python using Playwright. It automates Google AI Studio to transcribe local `.mp3` audio files into formatted Markdown text documents.
+The goal of the project is to create a lightweight, robust
+command-line tool written in Python using Playwright. It automates
+Google AI Studio to transcribe local `.mp3` audio files into formatted
+Markdown text documents.
 
-This slice deliberately bypasses Google's anti-bot/2FA login mechanics by utilizing **Session Reuse** (importing a pre-authenticated JSON state). It focuses entirely on local execution, browser automation, async UI synchronization, and data extraction.
+This slice deliberately bypasses Google's anti-bot/2FA login mechanics
+by utilizing **Session Reuse** (importing a pre-authenticated JSON
+state). It focuses entirely on local execution, browser automation,
+async UI synchronization, and data extraction.
 
 ## 2. Target Workflow
 1. **Manual Preparation:** User launches Google Chrome manually with remote debugging enabled (`--remote-debugging-port=9222`).
