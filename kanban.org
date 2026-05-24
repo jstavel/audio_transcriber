@@ -1,0 +1,44 @@
+#+TITLE: Kanban: Audio Transcriber Pipeline
+#+CATEGORY: AUDIO-TRANS
+#+TAGS: :CODE:BUG:QA:PLAYWRIGHT:
+#+STARTUP: content
+
+* Backlog
+** TODO Add support for batch processing of multiple audio files          :CODE:
+** TODO Implement automated moving of processed .mp3 files to archive     :CODE:
+
+* TODO [0/2] Fix Polling and Stability (Current Blocker)
+  :PROPERTIES:
+  :CREATED:  [2026-05-24 Sun 11:30]
+  :END:
+  The script fails during the transcription completion phase. The locator 
+  `section.combined-content` threw a 30000ms timeout exception. Need to analyze 
+  the generated artifacts and adjust the stability strategy.
+
+** TODO [#A] Analyze =debug_screenshot.png= and =debug_elements.txt=      :QA:
+   - [ ] Verify if Google AI Studio changed its DOM structure (section classes).
+   - [ ] Identify how the target text element behaves during streaming vs. when finished.
+
+** TODO [#B] Refactor transcription completion detection in =transcribe.py= :CODE:
+   - *Hypothesis:* The `.last` locator failed because the element was volatile or not yet present in the DOM during streaming.
+   - [ ] Implement a more robust detection method (e.g., polling the state of the "Stop/Submit" button or a custom JS function to detect text length stability).
+   - [ ] Increase the default timeout—30 seconds might be insufficient for long MP3 files to finish transcribing.
+
+* IN PROGRESS [0/1] Core Pipeline Development
+** TODO Successfully execute and test end-to-end transcription of a single file :QA:
+   - Execution command: =python transcribe.py 2026-05-19\ 22_41_10.mp3=
+
+* DONE [5/5] Completed Tasks (Archive)
+** DONE Initialize project structure and virtual environment (venv)       :CODE:
+** DONE Set up CDP (Chrome DevTools Protocol) connection on port 9222     :CODE:
+** DONE Implement automated navigation to Google AI Studio                :CODE:
+** DONE Automate .mp3 file upload into the prompt box                     :CODE:
+** DONE Implement prompt injection and trigger execution (Submit)          :CODE:
+
+---
+
+* LOG / DIAGNOSTICS
+** [2026-05-24 Sun 11:28] - Polling Crash Log
+   - *Error:* =Locator.inner_text: Timeout 30000ms exceeded.=
+   - *Target:* =waiting for locator("section.combined-content").last=
+   - *Behavior:* The script gracefully caught the exception and dumped diagnostic artifacts. Ready for QA analysis.
